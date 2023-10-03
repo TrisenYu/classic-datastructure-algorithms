@@ -1,11 +1,12 @@
 // 不重复的红黑树。
 // 致谢：`https://github.com/sakeven/RbTree/blob/master/rbtree.go`
+// 以及: `https://github.com/whnw/rbtree/blob/master/rbtree.cpp`
 #include <cstdio>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-
+#include <queue>
 enum Color
 {
     RED,
@@ -15,8 +16,6 @@ enum Color
 template <class T>
 class RBnode
 {
-    // TODO: 后期考虑在此处引入 cnt 形成可重复的红黑树？
-    // 要看删除好不好做了。
 private:
     Color _color;
     RBnode *_fa, *_lc, *_rc;
@@ -78,21 +77,26 @@ void destroyRBT(RBnode<T> *node)
         destroyRBT(node->getLc());
     if (node->getRc() != nullptr)
         destroyRBT(node->getRc());
+    node->setFa(nullptr);
     delete node;
     node = nullptr;
 }
 
-/*
+template <typename T>
+inline void colorPrinter(RBnode<T> *node)
+{
+    printf(node->getColor() ? "BLACK " : "RED ");
+}
+
 template <typename T>
 void DebugprintMsg(RBnode<T> *node)
 {
     printf("(node.fa, node.lc, node.rc) = (0x%X, 0x%X, 0x%X)", node->getFa(), node->getLc(), node->getRc());
-    printf(", (facol, nodecol) = (%d, %d)", node->getFa()->getColor(), node->getColor());
+    colorPrinter(node), colorPrinter(node->getFa());
     if (node != nullptr)
         printf(", val = %lld", node->getVal());
     puts("");
 }
-*/
 
 /**
  * 规则：
@@ -115,13 +119,10 @@ public:
         this->size = 0;
     }
     // 树的大小。
-    unsigned long long count() { return this->size; }
 
     RBnode<T> *find(T val);
     RBnode<T> *next(RBnode<T> *node);
     RBnode<T> *insert(T val);
-    void insertFix(RBnode<T> *pos);
-    void removeFix(RBnode<T> *pos, RBnode<T> *fa);
     void remove(T val);
 
     void preOrder(RBnode<T> *tmp)
@@ -148,8 +149,44 @@ public:
         postOrder(tmp->getRc());
         std::cout << tmp->getVal() << ' ';
     }
+    void layerOrder(RBnode<T> *tmp)
+    {
+        std::queue<RBnode<T> *> q;
+        q.push(tmp);
+        while (!q.empty())
+        {
+            RBnode<T> *u = q.front();
+            q.pop();
+
+            if (u->getLc() != nullptr)
+                q.push(u->getLc());
+            if (u->getRc() != nullptr)
+                q.push(u->getRc());
+
+            std::cout << u->getVal() << ' ';
+        }
+    }
+    void layerColor()
+    {
+        std::queue<RBnode<T> *> q;
+        q.push(this->root);
+        while (!q.empty())
+        {
+            RBnode<T> *u = q.front();
+            q.pop();
+
+            if (u->getLc() != nullptr)
+                q.push(u->getLc());
+            if (u->getRc() != nullptr)
+                q.push(u->getRc());
+
+            colorPrinter(u);
+        }
+    }
 
 private:
+    void insertFix(RBnode<T> *pos);
+    void removeFix(RBnode<T> *pos, RBnode<T> *fa);
     // 左右旋无需关心颜色。
     /**
      *     fa            fa
@@ -238,6 +275,7 @@ RBnode<T> *RBT<T>::find(T val)
     while (tmp != nullptr)
     {
         T test = tmp->getVal();
+
         if (test == val)
             break;
         else if (test < val)
@@ -270,13 +308,36 @@ RBnode<T> *RBT<T>::next(RBnode<T> *node)
 template <typename T>
 void RBT<T>::insertFix(RBnode<T> *cur)
 {
-    RBnode<T> *uncle = nullptr, *fa = nullptr, *gra = nullptr;
+    // TODO.
+}
 
-    while (cur->getFa() != nullptr &&
-           cur->getFa()->getColor() == RED)
+template <typename T>
+RBnode<T> *RBT<T>::insert(T val)
+{
+    // TODO.
+}
+
+template <typename T>
+void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
+{
+    // TODO.
+}
+
+template <typename T>
+void RBT<T>::remove(T val)
+{
+    // TODO.
+}
+
+/*
+
+    RBnode<T> *uncle = nullptr, *fa = cur->getFa(), *gra = nullptr;
+
+    while (fa != nullptr && fa->getColor() == RED)
     {
         // 需要判断父亲是祖父的左儿子还是右儿子。从而找到叔节点
-        fa = cur->getFa(), gra = fa->getFa();
+        fa = cur->getFa(),
+        gra = fa->getFa();
         if (fa == gra->getLc())
         {
             uncle = gra->getRc();
@@ -287,7 +348,7 @@ void RBT<T>::insertFix(RBnode<T> *cur)
              *     Rfa   Runcle  =>     Bfa Buncle   # 然后把祖父当成儿子来重复到根为止。
              *      |                    |
              *    Rcur                 Rcur
-             */
+             //
             if (uncle != nullptr && uncle->getColor() == RED)
             {
                 uncle->setColor(BLACK);
@@ -312,13 +373,10 @@ void RBT<T>::insertFix(RBnode<T> *cur)
                  *        [Buncle, Bnil]
                  * (3)
                  * # 插入正确，免除第一步左旋调整。使父亲变祖父即可。
-                 */
+                 //
 
                 if (cur == fa->getRc())
-                {
-                    cur = fa;
-                    this->_Lrotate(&cur);
-                }
+                    this->_Lrotate(&fa);
                 fa->setColor(BLACK);
                 gra->setColor(RED);
                 this->_Rrotate(&gra);
@@ -327,14 +385,6 @@ void RBT<T>::insertFix(RBnode<T> *cur)
         else // 操作对称。
         {
             uncle = gra->getLc();
-            /**
-             * (1)
-             *        Bgra               Rgra
-             *        / \                /   \
-             *  Runcle   Rfa  =>     Buncle   Bfa   # 然后把祖父当成儿子来重复到根为止。
-             *            |                    |
-             *            Rcur                 Rcur
-             */
             if (uncle != nullptr && uncle->getColor() == RED)
             {
                 uncle->setColor(BLACK);
@@ -344,24 +394,18 @@ void RBT<T>::insertFix(RBnode<T> *cur)
             }
             else
             {
-
                 if (cur == fa->getLc())
-                {
-                    cur = fa;
-                    this->_Rrotate(&cur);
-                }
+                    this->_Rrotate(&fa);
                 fa->setColor(BLACK);
                 gra->setColor(RED);
-                this->_Lrotate(&gra); // ???
+                this->_Lrotate(&gra);
             }
         }
     }
     this->root->setColor(BLACK);
-}
+*/
 
-template <typename T>
-RBnode<T> *RBT<T>::insert(T val)
-{
+/*
     RBnode<T> *node = this->root,
               *lst_node = nullptr;
     while (node != nullptr)
@@ -384,7 +428,6 @@ RBnode<T> *RBT<T>::insert(T val)
 
     if (lst_node == nullptr)
     {
-        node->setFa(nullptr);
         node->setColor(BLACK);
         this->root = node;
         return node;
@@ -397,15 +440,9 @@ RBnode<T> *RBT<T>::insert(T val)
     // 插入后往往需要修复
     this->insertFix(node);
     return node;
-}
+*/
 
-// 传进来时，pos 是黑色的。
-// 这个函数负责恢复删除后整棵树的平衡。
-// 简单来说，平衡之前 pos 一定会有一个兄弟，否则违反了红黑树本身的性质。
-
-template <typename T>
-void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
-{
+/*
     RBnode<T> *bro = nullptr;
 
     while (pos != this->root && pos->getColor() == BLACK)
@@ -423,7 +460,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
          *    Bpos   Rbro    =>       Rfa  Br
          *   <Bnil>                  /  \
          *                        Bpos  [Bnil, Bbro_lc]
-         */
+         //
         if (bro->getColor() == RED)
         {
             fa->setColor(RED);
@@ -446,7 +483,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
              *    Bpos   Bbro
              *           / \
              *     sibling  son
-             */
+             //
             RBnode<T> *son = sign ? bro->getRc() : bro->getLc(),
                       *sibling = sign ? bro->getLc() : bro->getRc();
 
@@ -454,9 +491,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
 
             if (now == BLACK)
             {
-                if (sibling != nullptr)
-                    sibling->setColor(BLACK);
-
+                sibling->setColor(BLACK);
                 bro->setColor(RED);
                 sign ? this->_Rrotate(&bro) : this->_Lrotate(&bro);
                 bro = sign ? fa->getRc() : fa->getLc();
@@ -466,9 +501,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
             fa->setColor(BLACK);
 
             son = sign ? bro->getRc() : bro->getLc();
-
-            if (son != nullptr)
-                son->setColor(BLACK);
+            son->setColor(BLACK);
 
             sign ? this->_Lrotate(&fa) : this->_Rrotate(&fa);
 
@@ -477,30 +510,18 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
     }
     if (pos != nullptr)
         pos->setColor(BLACK);
-}
-/**
- * 合法性质:
- *  1. 只可能删除没有子树的红叶子。
- *  2. 只可能删除只有一个子树的黑节点。
- *  3. 只可能删除黑色叶子。
- * 针对以上三种性质，应对策略分别是：
- *  1. 直接删除。
- *  2. 孩子继承。
- *  3. 判断兄弟。
- * @attention  删除相当于是插入节点的逆操作。
- * 由于可能提供的值并不能保证合法，所以需要先找到再说，否则免谈。
- * 找到以后的策略就是：替死鬼替死。
- * @param val: 泛型，由用户自定义。
- */
-template <typename T>
-void RBT<T>::remove(T val)
-{
+*/
+
+/*
     RBnode<T> *node = this->find(val);
     if (node == nullptr)
         return;
 
     RBnode<T> *successor = this->next(node),
               *ward = nullptr;
+    puts("successor: ");
+    DebugprintMsg(successor);
+    system("pause");
     // 到这里找到了最多只有一个孩子的替死鬼<successor>。
 
     if (successor->getLc() != nullptr)
@@ -526,10 +547,18 @@ void RBT<T>::remove(T val)
 
     // 原本删红就可以顺利结束，但现在奈何是黑的？
     // 可能会传空指针进去。但是只要做好判断就行。
+
+    puts("successor: ");
+    DebugprintMsg(successor);
+    puts("fa_nxt: ");
+    DebugprintMsg(fa_nxt);
+    puts("ward: ");
+    DebugprintMsg(ward);
+
     if (successor->getColor() == BLACK)
         this->removeFix(ward, fa_nxt);
 
     delete successor;
     successor = nullptr;
     this->size--;
-}
+*/
