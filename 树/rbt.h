@@ -30,6 +30,7 @@ public:
     void setLc(RBnode *node) { this->_lc = node; }
     void setRc(RBnode *node) { this->_rc = node; }
     void setFa(RBnode *node) { this->_fa = node; }
+    void setVal(const T &val) { this->_val = val; }
     RBnode *getLc()
     {
         if (this == nullptr)
@@ -80,6 +81,19 @@ void destroyRBT(RBnode<T> *node)
     delete node;
     node = nullptr;
 }
+
+/*
+template <typename T>
+void DebugprintMsg(RBnode<T> *node)
+{
+    printf("(node.fa, node.lc, node.rc) = (0x%X, 0x%X, 0x%X)", node->getFa(), node->getLc(), node->getRc());
+    printf(", (facol, nodecol) = (%d, %d)", node->getFa()->getColor(), node->getColor());
+    if (node != nullptr)
+        printf(", val = %lld", node->getVal());
+    puts("");
+}
+*/
+
 /**
  * 规则：
  * 1. 根和空叶子都是黑色。
@@ -110,6 +124,31 @@ public:
     void removeFix(RBnode<T> *pos, RBnode<T> *fa);
     void remove(T val);
 
+    void preOrder(RBnode<T> *tmp)
+    {
+        if (tmp == nullptr)
+            return;
+        std::cout << tmp->getVal() << ' ';
+        preOrder(tmp->getLc());
+        preOrder(tmp->getRc());
+    }
+    void inOrder(RBnode<T> *tmp)
+    {
+        if (tmp == nullptr)
+            return;
+        inOrder(tmp->getLc());
+        std::cout << tmp->getVal() << ' ';
+        inOrder(tmp->getRc());
+    }
+    void postOrder(RBnode<T> *tmp)
+    {
+        if (tmp == nullptr)
+            return;
+        postOrder(tmp->getLc());
+        postOrder(tmp->getRc());
+        std::cout << tmp->getVal() << ' ';
+    }
+
 private:
     // 左右旋无需关心颜色。
     /**
@@ -121,25 +160,28 @@ private:
      *      /  \      / \
      *    lrc  rrc       lrc
      */
-    void _Lrotate(RBnode<T> *node)
+    void _Lrotate(RBnode<T> **node)
     {
-        RBnode<T> *rc = node->getRc();
-        RBnode<T> *lrc = rc->getLc();
 
-        node->setRc(lrc);
+        RBnode<T> *rc = (*node)->getRc();
+        RBnode<T> *lrc = rc->getLc();
+        (*node)->setRc(lrc);
         if (lrc != nullptr)
-            lrc->setFa(node);
-        RBnode<T> *fa = node->getFa();
+            lrc->setFa((*node));
+
+        RBnode<T> *fa = (*node)->getFa();
 
         if (fa == nullptr)
             this->root = rc;
-        else if (fa->getLc() == node)
+        else if (fa->getLc() == (*node))
             fa->setLc(rc);
         else
             fa->setRc(rc);
 
-        rc->setLc(node);
-        node->setFa(rc);
+        rc->setFa(fa);
+        rc->setLc((*node));
+
+        (*node)->setFa(rc);
     }
     /**
      *       fa           fa
@@ -150,25 +192,26 @@ private:
      *    /  \             / \
      *  llc  rlc         rlc
      */
-    void _Rrotate(RBnode<T> *node)
+    void _Rrotate(RBnode<T> **node)
     {
-        RBnode<T> *lc = node->getLc();
+        RBnode<T> *lc = (*node)->getLc();
         RBnode<T> *rlc = lc->getRc();
 
-        node->setLc(rlc);
+        (*node)->setLc(rlc);
         if (rlc != nullptr)
-            rlc->setFa(node);
-        RBnode<T> *fa = node->getFa();
+            rlc->setFa(*node);
+        RBnode<T> *fa = (*node)->getFa();
 
         if (fa == nullptr)
             this->root = lc;
-        else if (fa->getLc() == node)
+        else if (fa->getLc() == (*node))
             fa->setLc(lc);
         else
             fa->setRc(lc);
 
-        lc->setRc(node);
-        node->setFa(lc);
+        lc->setFa(fa);
+        lc->setRc(*node);
+        (*node)->setFa(lc);
     }
     RBnode<T> *findMax(RBnode<T> *tmp)
     {
@@ -234,8 +277,6 @@ void RBT<T>::insertFix(RBnode<T> *cur)
     {
         // 需要判断父亲是祖父的左儿子还是右儿子。从而找到叔节点
         fa = cur->getFa(), gra = fa->getFa();
-        printf("(gra, fa, now): 0x%X, 0x%X, 0x%X\n", gra, fa, cur);
-        printf("fa.val, cur.val = 0x%X, 0x%X\n", fa->getVal(), cur->getVal());
         if (fa == gra->getLc())
         {
             uncle = gra->getRc();
@@ -272,14 +313,15 @@ void RBT<T>::insertFix(RBnode<T> *cur)
                  * (3)
                  * # 插入正确，免除第一步左旋调整。使父亲变祖父即可。
                  */
+
                 if (cur == fa->getRc())
                 {
                     cur = fa;
-                    this->_Lrotate(cur);
+                    this->_Lrotate(&cur);
                 }
-                cur->setColor(BLACK);
+                fa->setColor(BLACK);
                 gra->setColor(RED);
-                this->_Rrotate(gra);
+                this->_Rrotate(&gra);
             }
         }
         else // 操作对称。
@@ -302,17 +344,17 @@ void RBT<T>::insertFix(RBnode<T> *cur)
             }
             else
             {
+
                 if (cur == fa->getLc())
                 {
                     cur = fa;
-                    this->_Rrotate(cur);
+                    this->_Rrotate(&cur);
                 }
-                cur->setColor(BLACK);
+                fa->setColor(BLACK);
                 gra->setColor(RED);
-                this->_Lrotate(gra);
+                this->_Lrotate(&gra); // ???
             }
         }
-        printf("A: (gra, fa, uncle, now): 0x%X, 0x%X,  0x%X, 0x%X\n", gra, fa, uncle, cur);
     }
     this->root->setColor(BLACK);
 }
@@ -386,7 +428,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
         {
             fa->setColor(RED);
             bro->setColor(BLACK);
-            sign ? this->_Lrotate(fa) : this->_Rrotate(fa);
+            sign ? this->_Lrotate(&fa) : this->_Rrotate(&fa);
             bro = sign ? fa->getRc() : fa->getLc();
         }
 
@@ -416,8 +458,8 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
                     sibling->setColor(BLACK);
 
                 bro->setColor(RED);
-                sign ? this->_Rrotate(bro) : this->_Lrotate(bro);
-                bro = sign ? fa->getRc : fa->getLc;
+                sign ? this->_Rrotate(&bro) : this->_Lrotate(&bro);
+                bro = sign ? fa->getRc() : fa->getLc();
             }
 
             bro->setColor(fa->getColor());
@@ -428,7 +470,7 @@ void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
             if (son != nullptr)
                 son->setColor(BLACK);
 
-            sign ? this->_Lrotate(fa) : this->_Rrotate(fa);
+            sign ? this->_Lrotate(&fa) : this->_Rrotate(&fa);
 
             pos = this->root;
         }
