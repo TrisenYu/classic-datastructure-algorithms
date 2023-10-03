@@ -170,7 +170,7 @@ int main()
 
     AVLnode<double> *ptr = nullptr;
     double l = -1, r = 2;
-    for (; l < r; l += 0.01)
+    for (; l < r; l += 0.001)
         ptr = AVLinsert(ptr, l);
     deleteTest_double(&ptr);
     searchRepeatedlyTest_double(ptr);
