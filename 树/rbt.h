@@ -1,7 +1,8 @@
 /**
  * 插入数据不重复的红黑树。
  * 致谢：`https://github.com/sakeven/RbTree/blob/master/rbtree.go`
- * 以及: `https://github.com/whnw/rbtree/blob/master/rbtree.cpp`
+ * 以及: `https://github.com/whnw/rbtree/blob/master/rbtree.cpp`、`https://github.com/shetell/DataStructure/blob/main/BST.hpp`
+ * 最后：`https://www.cs.usfca.edu/~galles/visualization/RedBlack.html`
  */
 
 #include <cstdio>
