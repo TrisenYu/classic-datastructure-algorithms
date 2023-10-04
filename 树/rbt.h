@@ -16,55 +16,30 @@ enum Color
 template <class T>
 class RBnode
 {
-private:
+public:
     Color _color;
     RBnode *_fa, *_lc, *_rc;
     T _val;
-
-public:
-    void setColor(Color setter)
-    {
-        this->_color = setter;
-    }
-    void setLc(RBnode *node) { this->_lc = node; }
-    void setRc(RBnode *node) { this->_rc = node; }
-    void setFa(RBnode *node) { this->_fa = node; }
-    void setVal(const T &val) { this->_val = val; }
-    RBnode *getLc()
-    {
-        if (this == nullptr)
-            return this;
-        return this->_lc;
-    }
-    RBnode *getRc()
-    {
-        if (this == nullptr)
-            return this;
-        return this->_rc;
-    }
-    RBnode *getFa()
-    {
-        if (this == nullptr)
-            return this;
-        return this->_fa;
-    }
-    Color getColor() { return this == nullptr ? BLACK : this->_color; }
-    T getVal() { return this->_val; }
-    RBnode(const T &val) : _val(val),
-                           _color(RED),
-                           _fa(nullptr),
-                           _lc(nullptr),
-                           _rc(nullptr) {}
+    RBnode() : _color(RED),
+               _fa(nullptr),
+               _lc(nullptr),
+               _rc(nullptr) {}
     ~RBnode()
     {
-        if (this->_lc != nullptr)
-            delete this->_lc;
-        if (this->_rc != nullptr)
-            delete this->_rc;
         this->_fa = this->_lc = this->_rc = nullptr;
         this->_color = RED;
+        this->_val;
     }
 };
+template <typename T>
+void printNode(RBnode<T> *node)
+{
+    printf("addr -> 0x%X, ", node);
+    if (node != nullptr)
+        printf("color = %d, (fa, lc, rc) = (0x%X, 0x%X, 0x%X), val = 0x%X",
+               node->_color, node->_fa, node->_lc, node->_rc, node->_val);
+    puts("");
+}
 /**
  * @brief  删除整棵树的节点。
  * @param *node: 当前的红黑树以 node 为根。并开始递归删除。
@@ -73,31 +48,15 @@ public:
 template <typename T>
 void destroyRBT(RBnode<T> *node)
 {
-    if (node->getLc() != nullptr)
-        destroyRBT(node->getLc());
-    if (node->getRc() != nullptr)
-        destroyRBT(node->getRc());
-    node->setFa(nullptr);
+    if (node == nullptr)
+        return;
+    if (node->_lc != nullptr)
+        destroyRBT(node->_lc);
+    if (node->_rc != nullptr)
+        destroyRBT(node->_rc);
     delete node;
-    node = nullptr;
+    return;
 }
-
-template <typename T>
-inline void colorPrinter(RBnode<T> *node)
-{
-    printf(node->getColor() ? "BLACK " : "RED ");
-}
-
-template <typename T>
-void DebugprintMsg(RBnode<T> *node)
-{
-    printf("(node.fa, node.lc, node.rc) = (0x%X, 0x%X, 0x%X)", node->getFa(), node->getLc(), node->getRc());
-    colorPrinter(node), colorPrinter(node->getFa());
-    if (node != nullptr)
-        printf(", val = %lld", node->getVal());
-    puts("");
-}
-
 /**
  * 规则：
  * 1. 根和空叶子都是黑色。
@@ -109,84 +68,75 @@ template <typename T>
 class RBT
 {
 public:
-    RBnode<T> *root;         // 根节点
-    unsigned long long size; // 整棵树的节点数。
+    RBnode<T> *root;         /// 根节点，使用时小心空值！！
+    unsigned long long size; /// 整棵树的节点数。
 
-    RBT() : root(nullptr), size(0) {}
+    RBT()
+    {
+        this->size = 0;
+        this->root = nullptr;
+    }
     ~RBT()
     {
-        destroyRBT(this->root);
         this->size = 0;
+        destroyRBT(this->root);
+        this->root = nullptr;
     }
-    // 树的大小。
 
-    RBnode<T> *find(T val);
+    RBnode<T> *search(T val);
     RBnode<T> *next(RBnode<T> *node);
-    RBnode<T> *insert(T val);
+    void insert(T val);
     void remove(T val);
-
-    void preOrder(RBnode<T> *tmp)
+    void preOrder(RBnode<T> *node)
     {
-        if (tmp == nullptr)
+        if (node == nullptr)
             return;
-        std::cout << tmp->getVal() << ' ';
-        preOrder(tmp->getLc());
-        preOrder(tmp->getRc());
+        std::cout << node->_val << ' ';
+        preOrder(node->_lc);
+        preOrder(node->_rc);
     }
-    void inOrder(RBnode<T> *tmp)
+    void inOrder(RBnode<T> *node)
     {
-        if (tmp == nullptr)
+        if (node == nullptr)
             return;
-        inOrder(tmp->getLc());
-        std::cout << tmp->getVal() << ' ';
-        inOrder(tmp->getRc());
+        inOrder(node->_lc);
+        std::cout << node->_val << ' ';
+        inOrder(node->_rc);
     }
-    void postOrder(RBnode<T> *tmp)
+    void postOrder(RBnode<T> *node)
     {
-        if (tmp == nullptr)
+        if (node == nullptr)
             return;
-        postOrder(tmp->getLc());
-        postOrder(tmp->getRc());
-        std::cout << tmp->getVal() << ' ';
+        postOrder(node->_lc);
+        postOrder(node->_rc);
+        std::cout << node->_val << ' ';
     }
-    void layerOrder(RBnode<T> *tmp)
+    void layerOrder(RBnode<T> *node)
     {
         std::queue<RBnode<T> *> q;
-        q.push(tmp);
+        q.push(node);
         while (!q.empty())
         {
             RBnode<T> *u = q.front();
             q.pop();
-
-            if (u->getLc() != nullptr)
-                q.push(u->getLc());
-            if (u->getRc() != nullptr)
-                q.push(u->getRc());
-
-            std::cout << u->getVal() << ' ';
+            if (u->_lc != nullptr)
+                q.push(u->_lc);
+            if (u->_rc != nullptr)
+                q.push(u->_rc);
+            std::cout << u->_val << ' ';
         }
-    }
-    void layerColor()
-    {
-        std::queue<RBnode<T> *> q;
-        q.push(this->root);
-        while (!q.empty())
-        {
-            RBnode<T> *u = q.front();
-            q.pop();
-
-            if (u->getLc() != nullptr)
-                q.push(u->getLc());
-            if (u->getRc() != nullptr)
-                q.push(u->getRc());
-
-            colorPrinter(u);
-        }
+        return;
     }
 
 private:
-    void insertFix(RBnode<T> *pos);
-    void removeFix(RBnode<T> *pos, RBnode<T> *fa);
+    Color testColor(RBnode<T> *node)
+    {
+        if (node == nullptr)
+            return BLACK;
+        return node->_color;
+    }
+    void insertFix(RBnode<T> *node);
+    void removeFix(RBnode<T> *node, RBnode<T> *fa);
     // 左右旋无需关心颜色。
     /**
      *     fa            fa
@@ -197,28 +147,24 @@ private:
      *      /  \      / \
      *    lrc  rrc       lrc
      */
-    void _Lrotate(RBnode<T> **node)
+    void _Lrotate(RBnode<T> *node)
     {
-
-        RBnode<T> *rc = (*node)->getRc();
-        RBnode<T> *lrc = rc->getLc();
-        (*node)->setRc(lrc);
+        RBnode<T> *rc = node->_rc, *fa = node->_fa,
+                  *lrc = rc->_lc;
         if (lrc != nullptr)
-            lrc->setFa((*node));
-
-        RBnode<T> *fa = (*node)->getFa();
+            lrc->_fa = node;
+        node->_rc = lrc;
 
         if (fa == nullptr)
             this->root = rc;
-        else if (fa->getLc() == (*node))
-            fa->setLc(rc);
+        else if (fa->_lc == node)
+            fa->_lc = rc;
         else
-            fa->setRc(rc);
+            fa->_rc = rc;
 
-        rc->setFa(fa);
-        rc->setLc((*node));
-
-        (*node)->setFa(rc);
+        rc->_fa = fa;
+        node->_fa = rc;
+        rc->_lc = node;
     }
     /**
      *       fa           fa
@@ -229,104 +175,284 @@ private:
      *    /  \             / \
      *  llc  rlc         rlc
      */
-    void _Rrotate(RBnode<T> **node)
+    void _Rrotate(RBnode<T> *node)
     {
-        RBnode<T> *lc = (*node)->getLc();
-        RBnode<T> *rlc = lc->getRc();
-
-        (*node)->setLc(rlc);
+        RBnode<T> *lc = node->_lc, *fa = node->_fa,
+                  *rlc = lc->_rc;
         if (rlc != nullptr)
-            rlc->setFa(*node);
-        RBnode<T> *fa = (*node)->getFa();
+            rlc->_fa = node;
+        node->_lc = rlc;
 
         if (fa == nullptr)
             this->root = lc;
-        else if (fa->getLc() == (*node))
-            fa->setLc(lc);
+        else if (fa->_lc == node)
+            fa->_lc = lc;
         else
-            fa->setRc(lc);
+            fa->_rc = lc;
 
-        lc->setFa(fa);
-        lc->setRc(*node);
-        (*node)->setFa(lc);
+        lc->_fa = fa;
+        node->_fa = lc;
+        lc->_rc = node;
     }
-    RBnode<T> *findMax(RBnode<T> *tmp)
+    RBnode<T> *findMax(RBnode<T> *node)
     {
-        if (tmp == nullptr)
-            return tmp;
-        while (tmp->getRc() != nullptr)
-            tmp = tmp->getRc();
-        return tmp;
+        RBnode<T> *lst = node;
+        while (node != nullptr)
+        {
+            lst = node;
+            node = node->_rc;
+        }
+        return lst;
     }
-    RBnode<T> *findMin(RBnode<T> *tmp)
+    RBnode<T> *findMin(RBnode<T> *node)
     {
-        if (tmp == nullptr)
-            return tmp;
-        while (tmp->getLc() != nullptr)
-            tmp = tmp->getLc();
-        return tmp;
+        RBnode<T> *lst = node;
+        while (node != nullptr)
+        {
+            lst = node;
+            node = node->_lc;
+        }
+
+        return lst;
     }
 };
 
 template <typename T>
-RBnode<T> *RBT<T>::find(T val)
+RBnode<T> *RBT<T>::search(T val)
 {
-    RBnode<T> *tmp = root;
-    while (tmp != nullptr)
+    RBnode<T> *node = this->root, *lst = nullptr;
+    while (node != nullptr)
     {
-        T test = tmp->getVal();
-
-        if (test == val)
-            break;
-        else if (test < val)
-            tmp = tmp->getRc();
+        lst = node;
+        if (node->_val == val)
+            break; // 已经存在。
+        else if (node->_val < val)
+            node = node->_rc;
         else
-            tmp = tmp->getLc();
+            node = node->_lc;
     }
-    return tmp;
+    return lst;
 }
-/**
- * 中序遍历（左中右）即为升序。
- * 所以找左边最大或者右边最小。如果没有孩子的，返回自己。
- *         <         >
- *          \       /
- *             ...
- *      中 程 不 可 存 在 拐 点
- */
+// 严格找到后继。
 template <typename T>
 RBnode<T> *RBT<T>::next(RBnode<T> *node)
 {
-    if (node->getRc() != nullptr)
-        return this->findMin(node->getRc());
-    // 接下来找左边的最大
-    if (node->getLc() != nullptr)
-        return this->findMax(node->getLc());
-    // 实在不行自己就是。
-    return node;
+    if (node->_rc != nullptr)
+        return this->findMin(node->_rc);
+    RBnode<T> *fa = node;
+    while (fa != nullptr && fa->_rc == node)
+        node = fa, fa = node->_fa;
+    return fa;
 }
 
 template <typename T>
-void RBT<T>::insertFix(RBnode<T> *cur)
+void RBT<T>::insertFix(RBnode<T> *node)
 {
-    // TODO.
+    /**循环中的两个最大的判断分别的示意如下。
+     * (1) # 以父亲位于祖父左侧的情况为例。右侧的情况对称。
+     *        Bgra               Rgra
+     *        / \                /  \
+     *     Rfa   Runcle  =>     Bfa Buncle   # 然后把祖父当成儿子来重复到根为止。
+     *      |                    |
+     *    Rcur                 Rcur
+     *
+     * (2) # 以父亲位于祖父左侧的情况为例。右侧的情况对称。
+     *      Bgra                    Rgra
+     *      /  \             1      /  \
+     *    Rfa [Buncle, Bnil] =>   Bcur  [Buncle, Bnil]
+     *     \                      /
+     *      Rcur                Rfa
+     *
+     *                    Bcur
+     *              2    /   \
+     *               => Rfa   Rgra
+     *                           \
+     *                      [Buncle, Bnil]
+     *
+     *    # (2)中的另外一种情况免除第一步左旋调整。使父亲变祖父即可。
+     */
+    RBnode<T> *fa = node->_fa, *uncle = nullptr, *gra = nullptr;
+    while (node != nullptr && node != this->root && node->_fa->_color == RED)
+    {
+        fa = node->_fa, gra = fa->_fa;
+
+        bool sign = gra->_lc == fa;
+        uncle = sign ? gra->_rc : gra->_lc;
+
+        if (uncle != nullptr && uncle->_color == RED)
+        {
+            uncle->_color = (fa->_color = BLACK);
+            gra->_color = RED;
+            node = gra;
+        }
+        else
+        {
+            if (sign && node == fa->_rc)
+            {
+                this->_Lrotate(fa);
+                fa = gra->_lc;
+                node = fa->_lc;
+            }
+            else if (!sign && node == fa->_lc)
+            {
+                this->_Rrotate(fa);
+                fa = gra->_rc;
+                node = fa->_rc;
+            }
+            sign ? this->_Rrotate(gra) : this->_Lrotate(gra);
+            fa->_color = BLACK, gra->_color = RED;
+        }
+    }
+    this->root->_color = BLACK;
 }
 
 template <typename T>
-RBnode<T> *RBT<T>::insert(T val)
+void RBT<T>::insert(T val)
 {
-    // TODO.
+    RBnode<T> *node = this->root, *lst = this->root;
+
+    while (node != nullptr)
+    {
+        lst = node;
+        if (node->_val == val)
+            return;
+        else if (node->_val > val)
+            node = node->_lc;
+        else
+            node = node->_rc;
+    }
+
+    node = new RBnode<T>;
+    node->_val = val;
+    node->_lc = node->_rc = nullptr;
+    this->size++;
+
+    if (this->root == nullptr)
+    {
+        node->_color = BLACK;
+        node->_fa = nullptr;
+        this->root = node;
+        return;
+    }
+    RBnode<T> *fa = lst;
+
+    if (fa->_val > node->_val)
+        fa->_lc = node;
+    else
+        fa->_rc = node;
+
+    node->_fa = fa;
+    if (fa->_color == RED)
+        this->insertFix(node);
+
+    return;
 }
 
 template <typename T>
-void RBT<T>::removeFix(RBnode<T> *pos, RBnode<T> *fa)
+void RBT<T>::removeFix(RBnode<T> *node, RBnode<T> *fa)
 {
-    // TODO.
+    RBnode<T> *bro = nullptr;
+    while (node != this->root && this->testColor(node) == BLACK)
+    {
+        if (node != nullptr)
+            fa = node->_fa;
+
+        bool sign = fa->_lc == node;
+        bro = sign ? fa->_rc : fa->_lc;
+        /**
+         * 以 Bpos 在左边的情况为例。
+         *        fa                   Bbro
+         *       /  \                  /  \
+         *    Bpos   Rbro    =>       Rfa  Br
+         *   <Bnil>                  /  \
+         *                        Bpos  [Bnil, Bbro_lc]
+         */
+        if (this->testColor(bro) == RED)
+        {
+            bro->_color = BLACK;
+            fa->_color = RED;
+            sign ? this->_Lrotate(fa) : this->_Rrotate(fa);
+            bro = sign ? fa->_rc : fa->_lc;
+        }
+        if (this->testColor(bro->_lc) == BLACK &&
+            this->testColor(bro->_rc) == BLACK)
+            bro->_color = RED, node = fa;
+        else // 至少有一个是不黑的。
+        {
+            /**
+             * 以在左边的情况为例。
+             *        Rfa
+             *       /   \
+             *    Bpos   Bbro
+             *           / \
+             *     sibling  son
+             */
+            RBnode<T> *son = sign ? bro->_rc : bro->_lc,
+                      *sibling = sign ? bro->_lc : bro->_rc;
+            if (this->testColor(son) == BLACK)
+            {
+                bro->_color = RED;
+                if (sibling != nullptr)
+                    sibling->_color = BLACK;
+                sign ? this->_Rrotate(bro) : this->_Lrotate(bro);
+                bro = sign ? fa->_rc : fa->_lc;
+            }
+
+            bro->_color = fa->_color;
+            fa->_color = BLACK;
+
+            son = sign ? bro->_rc : bro->_lc;
+            son->_color = BLACK;
+            sign ? this->_Lrotate(fa) : this->_Rrotate(fa);
+            node = this->root;
+        }
+    }
+    if (node != nullptr)
+        node->_color = BLACK;
 }
 
 template <typename T>
 void RBT<T>::remove(T val)
 {
-    // TODO.
+    RBnode<T> *node = this->search(val);
+    if (node == nullptr)
+        return;
+    RBnode<T> *successor = nullptr,
+              *nchild = nullptr,
+              *fa = node->_fa;
+
+    if (node->_lc != nullptr && node->_rc != nullptr)
+        successor = this->next(node);
+    else
+        successor = node;
+
+    if (successor->_lc != nullptr)
+        nchild = successor->_lc;
+    else
+        nchild = successor->_rc;
+
+    fa = successor->_fa;
+
+    if (nchild != nullptr)
+        nchild->_fa = fa;
+
+    if (fa == nullptr)
+        this->root = nchild;
+    else if (fa->_lc == successor)
+        fa->_lc = nchild;
+    else
+        fa->_rc = nchild;
+
+    if (successor != node)
+        node->_val = successor->_val;
+
+    if (successor->_color == BLACK)
+        this->removeFix(nchild, fa);
+    this->size--;
+    if (!size)
+        this->root = nullptr;
+    delete successor;
+    // 我也不懂要干什么了。
 }
 
 /*
@@ -358,23 +484,6 @@ void RBT<T>::remove(T val)
             }
             else // 叔叔可能不在或者是正常的
             {
-                /**
-                 * (2)
-                 *      Bgra                    Rgra
-                 *      /  \             1      /  \
-                 *    Rfa [Buncle, Bnil] =>   Bcur  [Buncle, Bnil]
-                 *     \                      /
-                 *      Rcur                Rfa
-                 *
-                 *      Bcur
-                 * 2    /   \
-                 * => Rfa   Rgra
-                 *            \
-                 *        [Buncle, Bnil]
-                 * (3)
-                 * # 插入正确，免除第一步左旋调整。使父亲变祖父即可。
-                 //
-
                 if (cur == fa->getRc())
                     this->_Lrotate(&fa);
                 fa->setColor(BLACK);
@@ -453,14 +562,7 @@ void RBT<T>::remove(T val)
         bool sign = fa->getLc() == pos;
 
         bro = sign ? fa->getRc() : fa->getLc();
-        /**
-         * 以 Bpos 在左边的情况为例。
-         *        fa                   Bbro
-         *       /  \                  /  \
-         *    Bpos   Rbro    =>       Rfa  Br
-         *   <Bnil>                  /  \
-         *                        Bpos  [Bnil, Bbro_lc]
-         //
+
         if (bro->getColor() == RED)
         {
             fa->setColor(RED);
@@ -476,14 +578,7 @@ void RBT<T>::remove(T val)
 
         else // 至少有一个不是黑的。
         {
-            /**
-             * 以在左边的情况为例。
-             *        Rfa
-             *       /   \
-             *    Bpos   Bbro
-             *           / \
-             *     sibling  son
-             //
+
             RBnode<T> *son = sign ? bro->getRc() : bro->getLc(),
                       *sibling = sign ? bro->getLc() : bro->getRc();
 
