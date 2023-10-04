@@ -1,12 +1,17 @@
-// 不重复的红黑树。
-// 致谢：`https://github.com/sakeven/RbTree/blob/master/rbtree.go`
-// 以及: `https://github.com/whnw/rbtree/blob/master/rbtree.cpp`
+/**
+ * 插入数据不重复的红黑树。
+ * 致谢：`https://github.com/sakeven/RbTree/blob/master/rbtree.go`
+ * 以及: `https://github.com/whnw/rbtree/blob/master/rbtree.cpp`
+ */
+
 #include <cstdio>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <queue>
+#include <string>
+
 enum Color
 {
     RED,
@@ -32,7 +37,7 @@ public:
     }
 };
 template <typename T>
-void printNode(RBnode<T> *node)
+void DebugPrintNode(RBnode<T> *node)
 {
     printf("addr -> 0x%X, ", node);
     if (node != nullptr)
@@ -57,6 +62,7 @@ void destroyRBT(RBnode<T> *node)
     delete node;
     return;
 }
+
 /**
  * 规则：
  * 1. 根和空叶子都是黑色。
@@ -212,10 +218,30 @@ private:
             lst = node;
             node = node->_lc;
         }
-
         return lst;
     }
 };
+template <typename T>
+Color __testColor(RBnode<T> *node)
+{
+    if (node == nullptr)
+        return BLACK;
+    return node->_color;
+}
+template <typename T>
+void printTree(RBnode<T> *node, bool left, std::string const &indent)
+{
+    if (node->_lc)
+        printTree(node->_lc, true, indent + (left ? "      " : "|     "));
+
+    std::cout << indent;
+    std::cout << (left ? '/' : '\\');
+    std::cout << "-----";
+    std::cout << node->_val << ' '
+              << (__testColor(node) ? "BLACK" : "RED") << '\n';
+    if (node->_rc)
+        printTree(node->_rc, false, indent + (left ? "|     " : "      "));
+}
 
 template <typename T>
 RBnode<T> *RBT<T>::search(T val)
@@ -248,7 +274,8 @@ RBnode<T> *RBT<T>::next(RBnode<T> *node)
 template <typename T>
 void RBT<T>::insertFix(RBnode<T> *node)
 {
-    /**循环中的两个最大的判断分别的示意如下。
+    /**
+     * 循环中的两个最大的判断分别的示意如下。
      * (1) # 以父亲位于祖父左侧的情况为例。右侧的情况对称。
      *        Bgra               Rgra
      *        / \                /  \
@@ -263,13 +290,13 @@ void RBT<T>::insertFix(RBnode<T> *node)
      *     \                      /
      *      Rcur                Rfa
      *
-     *                    Bcur
-     *              2    /   \
-     *               => Rfa   Rgra
-     *                           \
-     *                      [Buncle, Bnil]
+     *                             Bcur
+     *                       2    /    \
+     *                       => Rfa    Rgra
+     *                                   \
+     *                                  [Buncle, Bnil]
      *
-     *    # (2)中的另外一种情况免除第一步左旋调整。使父亲变祖父即可。
+     * # (2)中的另外一种情况免除第一步左旋调整。使父亲变祖父即可。
      */
     RBnode<T> *fa = node->_fa, *uncle = nullptr, *gra = nullptr;
     while (node != nullptr && node != this->root && node->_fa->_color == RED)
@@ -417,6 +444,7 @@ void RBT<T>::remove(T val)
     RBnode<T> *node = this->search(val);
     if (node == nullptr)
         return;
+
     RBnode<T> *successor = nullptr,
               *nchild = nullptr,
               *fa = node->_fa;
@@ -448,9 +476,10 @@ void RBT<T>::remove(T val)
 
     if (successor->_color == BLACK)
         this->removeFix(nchild, fa);
+
     this->size--;
-    if (!size)
+    if (!this->size)
         this->root = nullptr;
+
     delete successor;
-    // 我也不懂要干什么了。
 }
