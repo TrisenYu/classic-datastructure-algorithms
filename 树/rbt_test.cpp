@@ -1,6 +1,8 @@
 #include "./rbt.h"
 void TEST1(RBT<long long> &tr);
 void TEST2(RBT<double> &tr);
+// void TEST3(RBT<std::string> &tr);
+// 非常奇怪，大概是 string 的比较没有实现吧。
 
 int main()
 {
@@ -8,22 +10,27 @@ int main()
 	TEST1(tr);
 	tr.~RBT();
 	system("pause");
-	/*
+	RBT<std::string> str;
+	TEST3(str);
+
 	RBT<double> dtr;
 	TEST2(dtr);
 	dtr.~RBT();
 	system("pause");
-	*/
+
 	return 0;
 }
 void TEST1(RBT<long long> &tr)
 {
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 14; i++)
 	{
 		tr.insert((long long)i);
 		tr.preOrder(tr.root);
 		puts("");
 	}
+	printTree(tr.root->_lc, true, "");
+	printf("(%lld BLACK)\n", tr.root->_val);
+	printTree(tr.root->_rc, false, "");
 	puts("----------------------------PASS1----------------------------");
 	for (int i = 65; i > 30; i--)
 	{
@@ -32,7 +39,7 @@ void TEST1(RBT<long long> &tr)
 		printf("\t[root = %lld, size = %llu]\n", tr.root->_val, tr.size);
 	}
 	printTree(tr.root->_lc, true, "");
-	printf("%lld BLACK\n", tr.root->_val);
+	printf("(%lld BLACK)\n", tr.root->_val);
 	printTree(tr.root->_rc, false, "");
 
 	puts("----------------------------PASS2----------------------------");
@@ -65,7 +72,7 @@ void TEST1(RBT<long long> &tr)
 	puts("----------------------------PASS4----------------------------");
 
 	printTree(tr.root->_lc, true, "");
-	printf("%lld BLACK\n", tr.root->_val);
+	printf("(%lld BLACK)\n", tr.root->_val);
 	printTree(tr.root->_rc, false, "");
 
 	puts("----------------------------PASS4.5----------------------------");
@@ -74,7 +81,7 @@ void TEST1(RBT<long long> &tr)
 
 	for (int i = 0; i < 17; i++)
 		tr.remove((long long)i);
-	printf("\t[root = %lld, size = %llu]\n", tr.root->_val, tr.size);
+	printf("[root = %lld, size = %llu]\n", tr.root->_val, tr.size);
 	puts("----------------------------PASS5----------------------------");
 
 	for (int i = -100; i <= 100; i++)
@@ -144,4 +151,23 @@ void TEST2(RBT<double> &tr)
 		printf("\t[root = %lf, size = %llu]\n", tr.root->_val, tr.size);
 	printf("[size = %llu]\n", tr.size);
 	puts("----------------------------PASS4----------------------------");
+}
+
+void TEST3(RBT<std::string> &tr)
+{
+	puts("begin testing 3...");
+	std::string a = "aaaaaaaa", b = "abcdeffg", c = "aa";
+	std::cout << a << b << c << '\n';
+	try
+	{
+		tr.insert(a), tr.insert(b);
+		printTree(tr.root->_lc, true, "");
+		std::cout << "(" << tr.root->_val << "BLACK)" << '\n';
+		printTree(tr.root->_rc, false, "");
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	tr.remove(a), tr.remove(c);
 }

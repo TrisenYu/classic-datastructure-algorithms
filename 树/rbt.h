@@ -236,10 +236,10 @@ void printTree(RBnode<T> *node, bool left, std::string const &indent)
         printTree(node->_lc, true, indent + (left ? "      " : "|     "));
 
     std::cout << indent;
-    std::cout << (left ? '/' : '\\');
+    std::cout << '+'; // left ? "/" : "\\"
     std::cout << "-----";
-    std::cout << node->_val << ' '
-              << (__testColor(node) ? "BLACK" : "RED") << '\n';
+    std::cout << '(' << node->_val << ' '
+              << (__testColor(node) ? "BLACK" : "RED") << ")\n";
     if (node->_rc)
         printTree(node->_rc, false, indent + (left ? "|     " : "      "));
 }
@@ -388,8 +388,8 @@ void RBT<T>::removeFix(RBnode<T> *node, RBnode<T> *fa)
         bool sign = fa->_lc == node;
         bro = sign ? fa->_rc : fa->_lc;
         /**
-         * 以 Bpos 在左边的情况为例。
-         *        fa                   Bbro
+         * 以 Bpos 在左边的情况为例。如果兄弟是红的，那么父亲一定是黑的。
+         *        Bfa                   Bbro
          *       /  \                  /  \
          *    Bpos   Rbro    =>       Rfa  Br
          *   <Bnil>                  /  \
@@ -409,7 +409,7 @@ void RBT<T>::removeFix(RBnode<T> *node, RBnode<T> *fa)
         {
             /**
              * 以在左边的情况为例。
-             *        Rfa
+             *        Bfa
              *       /   \
              *    Bpos   Bbro
              *           / \
