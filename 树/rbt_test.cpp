@@ -10,8 +10,8 @@ int main()
 	TEST1(tr);
 	tr.~RBT();
 	system("pause");
-	RBT<std::string> str;
-	TEST3(str);
+	// RBT<std::string> str;
+	// TEST3(str);
 
 	RBT<double> dtr;
 	TEST2(dtr);
@@ -35,7 +35,7 @@ void TEST1(RBT<long long> &tr)
 	for (int i = 65; i > 30; i--)
 	{
 		tr.insert((long long)i);
-		// tr.inOrder(tr.root);
+		tr.inOrder(tr.root);
 		printf("\t[root = %lld, size = %llu]\n", tr.root->_val, tr.size);
 	}
 	printTree(tr.root->_lc, true, "");
@@ -46,14 +46,14 @@ void TEST1(RBT<long long> &tr)
 	for (int i = -5; i <= 30; i++)
 	{
 		tr.insert((long long)i);
-		// tr.postOrder(tr.root);
-		// puts("");
+		tr.postOrder(tr.root);
+		puts("");
 	}
 	printf("%lld\n", tr.root->_val);
 	for (int i = 65; i > 30; i--)
 	{
 		tr.insert((long long)i);
-		// tr.inOrder(tr.root);
+		tr.inOrder(tr.root);
 		printf("\t[root = %lld, size =  %llu]\n", tr.root->_val, tr.size);
 	}
 	puts("----------------------------PASS3----------------------------");
@@ -63,11 +63,11 @@ void TEST1(RBT<long long> &tr)
 	for (long long i = -116; i <= -1; i++)
 	{
 		tr.insert(i);
-		// tr.inOrder(tr.root);
-		// puts("\n");
-		// tr.preOrder(tr.root);
-		// puts("\n-----------");
-		// tr.layerOrder(tr.root);
+		tr.inOrder(tr.root);
+		puts("\n");
+		tr.preOrder(tr.root);
+		puts("\n-----------");
+		tr.layerOrder(tr.root);
 	}
 	puts("----------------------------PASS4----------------------------");
 
@@ -152,7 +152,7 @@ void TEST2(RBT<double> &tr)
 	printf("[size = %llu]\n", tr.size);
 	puts("----------------------------PASS4----------------------------");
 }
-
+/*
 void TEST3(RBT<std::string> &tr)
 {
 	puts("begin testing 3...");
@@ -171,3 +171,4 @@ void TEST3(RBT<std::string> &tr)
 	}
 	tr.remove(a), tr.remove(c);
 }
+*/
