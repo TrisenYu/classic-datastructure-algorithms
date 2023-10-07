@@ -19,7 +19,7 @@ int dijkstra()
 {
     memset(dis, 0x3f, sizeof dis);
     dis[1] = 0;
-    // 堆优化 dij。
+    // 堆优化 dijkstra。
     std::priority_queue<pii, std::vector<pii>, std::greater<pii>> q;
     q.push({0, 1});
 
@@ -45,6 +45,43 @@ int dijkstra()
     if (dis[n] == 0x3f3f3f3f)
         return ~0;
     return dis[n];
+}
+
+int cnt[N];
+int spfa()
+{
+    std::queue<int> q;
+
+    for (int i = 1; i <= n; i++)
+        vis[i] = true, q.push(i);
+
+    while (q.size())
+    {
+        int t = q.front();
+        q.pop();
+
+        vis[t] = false; // 松弛操作。
+
+        for (int i = head[t]; ~i; i = to[i])
+        {
+            int j = e[i];
+            if (dis[j] > dis[t] + w[i])
+            {
+                dis[j] = dis[t] + w[i];
+                cnt[j] = cnt[t] + 1;
+
+                if (cnt[j] >= n)
+                    return true;
+
+                if (!vis[j])
+                {
+                    q.push(j);
+                    vis[j] = true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 int main()
